@@ -59,21 +59,15 @@ Collection = mongo.Collection;
 var uristring = process.env.MONGOLAB_URI || "mongodb://localhost/testdatabase" 
 var mongoUrl = url.parse (uristring);
 
-function includes(arr, obj) {
-  for(var i=0; i<arr.length; i++) {
-    if (arr[i] == obj) return true;
-  }
-  return false;
-}
-
 //
 // Open mongo database connection
 // A capped collection is needed to use tailable cursors
 //
 mongo.Db.connect (uristring, function (err, db) { 
   console.log ("Attempting connection to " + mongoUrl.protocol + "//" + mongoUrl.hostname + " (complete URL supressed).");
-  db.collectionNames(function (err, colls) {
-    if (includes(colls, 'messages')) {
+  db.collectionNames('messages', function (err, colls) {
+    if (colls.length > 0) {
+      console.log ('Attempting to drop old "messages" collection.')
       db.dropCollection("messages", function (err) {
 	if (err) {
 	  console.log ("Error dropping collection: ", err);
@@ -107,16 +101,15 @@ insert = 1;
 function insertDocs (collection) {
   n = Math.floor(Math.random() * 3);
   doc = docs[n] 
-  console.log ('n: ' + n);
   if (doc["_id"]) delete doc["_id"];
   time = new Date()
   doc.time = time.getTime()
   doc.ordinal = insert;
 
-  if (insert == 2^30 -1)
+  if (insert == Math.pow(2,30) -1)
     insert = 1;
   else
-    insert = i + 1;
+    insert = insert + 1;
   
   collection.insert(doc);
   
